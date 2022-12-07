@@ -21,6 +21,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
+
 import lk.ac.mrt.cse.dbs.simpleexpensemanager.data.AccountDAO;
 import lk.ac.mrt.cse.dbs.simpleexpensemanager.data.exception.InvalidAccountException;
 import lk.ac.mrt.cse.dbs.simpleexpensemanager.data.model.Account;
@@ -30,7 +35,12 @@ import lk.ac.mrt.cse.dbs.simpleexpensemanager.data.model.ExpenseType;
  * This is an In-Memory implementation of the AccountDAO interface. This is not a persistent storage. A HashMap is
  * used to store the account details temporarily in the memory.
  */
-public class InMemoryAccountDAO implements AccountDAO {
+public class InMemoryAccountDAO extends SQLiteOpenHelper implements AccountDAO {
+    private static final String TABLE_NAME = "AccountDetails";
+    private static final String ACCOUNT_NO = "accountNo";
+    private static final String BANK_NAME = "bankName";
+    private static final String ACCOUNT_HOLDER_NAME = "accountHolderName";
+    private static final String BALANCE = "balance";
     private final Map<String, Account> accounts;
 
     public InMemoryAccountDAO() {
@@ -38,13 +48,44 @@ public class InMemoryAccountDAO implements AccountDAO {
     }
 
     @Override
-    public List<String> getAccountNumbersList() {
-        return new ArrayList<>(accounts.keySet());
+    public void onCreate(SQLiteDatabase sqLiteDatabase) {
+        String query =" Create Table "+ TABLE_NAME+ "("+ACCOUNT_NO+ "TEXT primary key," +BANK_NAME+ "TEXT,"+ ACCOUNT_HOLDER_NAME+ "TEXT,"+ BALANCE +"NUMERIC )";
+
+        sqLiteDatabase.execSQL(query);
     }
 
     @Override
+    public void onUpgrade(SQLiteDatabase sqLiteDatabase, int i, int i1) {
+        sqLiteDatabase.execSQL("drop Table if exists " + TABLE_NAME);
+    }
+
+    @Override
+    public List<String> getAccountNumbersList() {
+
+        SQLiteDatabase dataBase1 = this.getReadableDatabase();
+        Cursor cursor1 = dataBase1.rawQuery(" SELECT " + ACCOUNT_NO + " FROM " + TABLE_NAME, null);
+        ArrayList<String> AccountNames = new ArrayList<String>();
+        if (cursor1.moveToFirst()) {
+            do {
+                AccountNames.add(cursor1.getString(1));
+            } while (cursor1.moveToNext());
+            return AccountNames;
+        }
+    }
+    @Override
     public List<Account> getAccountsList() {
-        return new ArrayList<>(accounts.values());
+        SQLiteDatabase dataBase2 = this.getReadableDatabase();
+
+        Cursor cursor2 = dataBase2.rawQuery(" SELECT * FROM " + TABLE_NAME, null);
+        ArrayList<Account> AccountList = new ArrayList<Account>();
+        if (cursor2.moveToFirst()) {
+            do {
+                AccountList.add(new Account(cursor2.getString(1), cursor2.getString(2), cursor2.getString(3), cursor2.getDouble(4)));
+            } while (cursor2.moveToNext());
+
+
+        }
+        return AccountList;
     }
 
     @Override
