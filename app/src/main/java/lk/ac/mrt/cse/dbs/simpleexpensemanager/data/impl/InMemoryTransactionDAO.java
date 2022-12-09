@@ -46,12 +46,8 @@ public class InMemoryTransactionDAO extends SQLiteOpenHelper implements Transact
     private static final int DB_VERSION = 1;
     private static final Context context = null;
 
-    private final ;
 
-    /*public InMemoryTransactionDAO() {
-        transactions = new LinkedList<>();
-    }*/
-    public InMemoryTransactionDAO{
+    public InMemoryTransactionDAO(){
         super(context, DB_NAME, null, DB_VERSION);
     }
     @Override
@@ -96,7 +92,7 @@ public class InMemoryTransactionDAO extends SQLiteOpenHelper implements Transact
 
         if (cursor2.moveToFirst()) {
             do {
-                transactions.add(new Transaction(new Date(cursor2.getString(1)),cursor2.getString(2),cursor2.getString(3),cursor2.getDouble(4)));
+                transactions.add(new Transaction(cursor2.getString(1),cursor2.getString(2),new ExpenseType(cursor2(3)),cursor2.getDouble(4)));
             } while (cursor2.moveToNext());
 
 
@@ -110,8 +106,12 @@ public class InMemoryTransactionDAO extends SQLiteOpenHelper implements Transact
         SQLiteDatabase dataBase2 = this.getReadableDatabase();
 
         Cursor cursor2 = dataBase2.rawQuery("SELECT * FROM " + TABLE_NAME, null);
+
+        List<Transaction> transactions = new LinkedList<>();
+
         int size = cursor2.getCount();
         if (size <= limit) {
+            transactions.add(new Transaction( (Date)cursor2.getString(1),cursor2.getString(2),cursor2.getString(3),cursor2.getDouble(4)));
             return transactions;
         }
         // return the last <code>limit</code> number of transaction logs
