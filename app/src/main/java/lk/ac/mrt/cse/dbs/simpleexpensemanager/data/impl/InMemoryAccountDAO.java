@@ -22,9 +22,13 @@ import java.util.List;
 import java.util.Map;
 
 
+import android.content.ContentValues;
+import android.content.Context;
 import android.database.Cursor;
+import android.database.DatabaseErrorHandler;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.support.annotation.Nullable;
 
 import lk.ac.mrt.cse.dbs.simpleexpensemanager.data.AccountDAO;
 import lk.ac.mrt.cse.dbs.simpleexpensemanager.data.exception.InvalidAccountException;
@@ -36,16 +40,22 @@ import lk.ac.mrt.cse.dbs.simpleexpensemanager.data.model.ExpenseType;
  * used to store the account details temporarily in the memory.
  */
 public class InMemoryAccountDAO extends SQLiteOpenHelper implements AccountDAO {
+
+    private static final String DB_NAME = "200093M";
     private static final String TABLE_NAME = "AccountDetails";
     private static final String ACCOUNT_NO = "accountNo";
     private static final String BANK_NAME = "bankName";
     private static final String ACCOUNT_HOLDER_NAME = "accountHolderName";
     private static final String BALANCE = "balance";
-    private final Map<String, Account> accounts;
+    private static final int DB_VERSION = 1;
+    private static final  Context context = null;
 
-    public InMemoryAccountDAO() {
-        this.accounts = new HashMap<>();
+ 
+    
+    public InMemoryAccountDAO(){
+        super(context, DB_NAME, null, DB_VERSION);
     }
+
 
     @Override
     public void onCreate(SQLiteDatabase sqLiteDatabase) {
@@ -71,6 +81,7 @@ public class InMemoryAccountDAO extends SQLiteOpenHelper implements AccountDAO {
             } while (cursor1.moveToNext());
             return AccountNames;
         }
+        return null;
     }
     @Override
     public List<Account> getAccountsList() {
@@ -90,8 +101,10 @@ public class InMemoryAccountDAO extends SQLiteOpenHelper implements AccountDAO {
 
     @Override
     public Account getAccount(String accountNo) throws InvalidAccountException {
-        if (accounts.containsKey(accountNo)) {
-            return accounts.get(accountNo);
+        SQLiteDatabase dataBase2 = this.getReadableDatabase();
+        Cursor cursor2 = dataBase2.rawQuery(" SELECT "+ACCOUNT_NO + " FROM " + TABLE_NAME + " WHERE  ACCOUNT_NO  ==  accountNo",null);
+        if (cursor2 != null) {
+            return (Account) cursor2;
         }
         String msg = "Account " + accountNo + " is invalid.";
         throw new InvalidAccountException(msg);
@@ -99,25 +112,43 @@ public class InMemoryAccountDAO extends SQLiteOpenHelper implements AccountDAO {
 
     @Override
     public void addAccount(Account account) {
-        accounts.put(account.getAccountNo(), account);
+        SQLiteDatabase database = this.getWritableDatabase();
+
+        ContentValues values = new ContentValues();
+
+        values.put(ACCOUNT_NO,account.getAccountNo());
+        values.put(BANK_NAME,account.getBankName());
+        values.put(ACCOUNT_HOLDER_NAME,account.getAccountHolderName());
+        values.put(BALANCE,account.getBalance());
+
+        database.insert(TABLE_NAME, null, values);
+
     }
 
     @Override
     public void removeAccount(String accountNo) throws InvalidAccountException {
-        if (!accounts.containsKey(accountNo)) {
+        SQLiteDatabase database = this.getReadableDatabase();
+        Cursor cursor2 = database.rawQuery(" SELECT "+ACCOUNT_NO + " FROM " + TABLE_NAME + " WHERE  ACCOUNT_NO  ==  accountNo",null);
+
+        if (cursor2 == null) {
             String msg = "Account " + accountNo + " is invalid.";
             throw new InvalidAccountException(msg);
         }
-        accounts.remove(accountNo);
+        database.delete(TABLE_NAME, ACCOUNT_NO + "=" + accountNo, null);
+
     }
 
     @Override
     public void updateBalance(String accountNo, ExpenseType expenseType, double amount) throws InvalidAccountException {
-        if (!accounts.containsKey(accountNo)) {
+
+        SQLiteDatabase database = this.getReadableDatabase();
+        Cursor cursor2 = database.rawQuery(" SELECT * FROM " + TABLE_NAME + " WHERE  ACCOUNT_NO  ==  accountNo",null);
+
+        if (cursor2==null) {
             String msg = "Account " + accountNo + " is invalid.";
             throw new InvalidAccountException(msg);
         }
-        Account account = accounts.get(accountNo);
+        Account account = (Account) cursor2;
         // specific implementation based on the transaction type
         switch (expenseType) {
             case EXPENSE:
@@ -127,6 +158,14 @@ public class InMemoryAccountDAO extends SQLiteOpenHelper implements AccountDAO {
                 account.setBalance(account.getBalance() + amount);
                 break;
         }
-        accounts.put(accountNo, account);
+        ContentValues values = new ContentValues();
+
+        values.put(ACCOUNT_NO,accountNo);
+        values.put(BANK_NAME,account.getBankName());
+        values.put(ACCOUNT_HOLDER_NAME,account.getAccountHolderName());
+        values.put(BALANCE,account.getBalance());
+
+        database.insert(TABLE_NAME, null, values);
+
     }
 }
