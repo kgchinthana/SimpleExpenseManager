@@ -22,13 +22,11 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
 import lk.ac.mrt.cse.dbs.simpleexpensemanager.data.TransactionDAO;
-import lk.ac.mrt.cse.dbs.simpleexpensemanager.data.model.Account;
 import lk.ac.mrt.cse.dbs.simpleexpensemanager.data.model.ExpenseType;
 import lk.ac.mrt.cse.dbs.simpleexpensemanager.data.model.Transaction;
 
@@ -44,10 +42,10 @@ public class InMemoryTransactionDAO extends SQLiteOpenHelper implements Transact
     private static final String EXPENSE_TYPE = "expenseType";
     private static final String AMOUNT = "amount";
     private static final int DB_VERSION = 1;
-    private static final Context context = null;
 
 
-    public InMemoryTransactionDAO(){
+
+    public InMemoryTransactionDAO(Context context){
         super(context, DB_NAME, null, DB_VERSION);
     }
     @Override
@@ -92,7 +90,9 @@ public class InMemoryTransactionDAO extends SQLiteOpenHelper implements Transact
 
         if (cursor2.moveToFirst()) {
             do {
-                transactions.add(new Transaction(cursor2.getString(1),cursor2.getString(2),new ExpenseType(cursor2(3)),cursor2.getDouble(4)));
+
+                java.util.Date utilDate = new java.util.Date(cursor2.getString(1));
+                transactions.add(new Transaction(utilDate,cursor2.getString(2),ExpenseType.valueOf(cursor2.getString(3)),cursor2.getDouble(4)));
             } while (cursor2.moveToNext());
 
 
@@ -111,7 +111,8 @@ public class InMemoryTransactionDAO extends SQLiteOpenHelper implements Transact
 
         int size = cursor2.getCount();
         if (size <= limit) {
-            transactions.add(new Transaction( (Date)cursor2.getString(1),cursor2.getString(2),cursor2.getString(3),cursor2.getDouble(4)));
+            java.util.Date utilDate = new java.util.Date(cursor2.getString(1));
+            transactions.add(new Transaction(utilDate,cursor2.getString(2),ExpenseType.valueOf(cursor2.getString(3)),cursor2.getDouble(4)));
             return transactions;
         }
         // return the last <code>limit</code> number of transaction logs
