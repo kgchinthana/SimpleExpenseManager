@@ -16,12 +16,16 @@
 
 package lk.ac.mrt.cse.dbs.simpleexpensemanager.data.impl;
 
+import android.annotation.SuppressLint;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-
+import android.icu.text.DateFormat;
+//import android.icu.text.SimpleDateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
@@ -34,66 +38,43 @@ import lk.ac.mrt.cse.dbs.simpleexpensemanager.data.model.Transaction;
  * This is an In-Memory implementation of TransactionDAO interface. This is not a persistent storage. All the
  * transaction logs are stored in a LinkedList in memory.
  */
-public class InMemoryTransactionDAO extends SQLiteOpenHelper implements TransactionDAO {
-    private static final String DB_NAME = "200093M";
-    private static final String TABLE_NAME = "TransactionDetails";
-    private static final String ACCOUNT_NO = "accountNo";
-    private static final String DATE = "date";
-    private static final String EXPENSE_TYPE = "expenseType";
-    private static final String AMOUNT = "amount";
-    private static final int DB_VERSION = 1;
+public class InMemoryTransactionDAO implements TransactionDAO {
 
+    private static final String pattern = "yyyy-MM-dd";
+    private static final SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern);
+    private DBHelper dbHelper;
 
 
     public InMemoryTransactionDAO(Context context){
-        super(context, DB_NAME, null, DB_VERSION);
-    }
-    @Override
-    public void onCreate(SQLiteDatabase sqLiteDatabase) {
-        String query =" Create Table "+ TABLE_NAME+ "("+ACCOUNT_NO+ "TEXT primary key," +DATE+ "TEXT,"+ EXPENSE_TYPE+ "TEXT,"+ AMOUNT +"NUMERIC )";
-
-        sqLiteDatabase.execSQL(query);
-
+         dbHelper= new DBHelper(context);
     }
 
-    @Override
-    public void onUpgrade(SQLiteDatabase sqLiteDatabase, int i, int i1) {
-        sqLiteDatabase.execSQL("drop Table if exists " + TABLE_NAME);
-    }
 
     @Override
     public void logTransaction(Date date, String accountNo, ExpenseType expenseType, double amount) {
-
-        SQLiteDatabase database = this.getWritableDatabase();
-
-        ContentValues values = new ContentValues();
-
-        values.put(DATE, String.valueOf(date));
-        values.put(ACCOUNT_NO,accountNo);
-        values.put(EXPENSE_TYPE, String.valueOf(expenseType));
-        values.put(AMOUNT, amount);
-
-        database.insert(TABLE_NAME, null, values);
+        String date1 = simpleDateFormat.format(date);
+        dbHelper.addEntriesTransactionDetailsTable( date1, accountNo, expenseType,amount);
 
     }
 
     @Override
     public List<Transaction> getAllTransactionLogs() {
 
-        SQLiteDatabase dataBase2 = this.getReadableDatabase();
-
-        Cursor cursor2 = dataBase2.rawQuery(" SELECT * FROM " + TABLE_NAME, null);
-
+        Cursor cursor = dbHelper.sendEntriesTransactionDetailsTable();
 
         List<Transaction> transactions = new LinkedList<>();
 
 
-        if (cursor2.moveToFirst()) {
+        if (cursor.moveToFirst()) {
             do {
+                try {
 
-                java.util.Date utilDate = new java.util.Date(cursor2.getString(1));
-                transactions.add(new Transaction(utilDate,cursor2.getString(2),ExpenseType.valueOf(cursor2.getString(3)),cursor2.getDouble(4)));
-            } while (cursor2.moveToNext());
+                    Date date =simpleDateFormat.parse(cursor.getString(1));
+                    transactions.add(new Transaction(date,cursor.getString(2),ExpenseType.valueOf(cursor.getString(3)),cursor.getDouble(4)));
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+            } while (cursor.moveToNext());
 
 
         }
@@ -103,19 +84,22 @@ public class InMemoryTransactionDAO extends SQLiteOpenHelper implements Transact
 
     @Override
     public List<Transaction> getPaginatedTransactionLogs(int limit) {
-        SQLiteDatabase dataBase2 = this.getReadableDatabase();
-
-        Cursor cursor2 = dataBase2.rawQuery("SELECT * FROM " + TABLE_NAME, null);
+        Cursor cursor = dbHelper.sendEntriesTransactionDetailsTable();
 
         List<Transaction> transactions = new LinkedList<>();
 
-        int size = cursor2.getCount();
+        int size = cursor.getCount();
         if (size <= limit) {
-            java.util.Date utilDate = new java.util.Date(cursor2.getString(1));
-            transactions.add(new Transaction(utilDate,cursor2.getString(2),ExpenseType.valueOf(cursor2.getString(3)),cursor2.getDouble(4)));
-            return transactions;
+            try {
+
+                Date date =simpleDateFormat.parse(cursor.toString());
+                transactions.add(new Transaction(date,cursor.getString(2),ExpenseType.valueOf(cursor.getString(3)),cursor.getDouble(4)));
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }            return transactions;
         }
         // return the last <code>limit</code> number of transaction logs
         return transactions.subList(size - limit, size);
     }
+
 }
