@@ -36,10 +36,10 @@ import lk.ac.mrt.cse.dbs.simpleexpensemanager.data.model.ExpenseType;
 import lk.ac.mrt.cse.dbs.simpleexpensemanager.data.model.Transaction;
 
 /**
- * This is an In-Memory implementation of TransactionDAO interface. This is not a persistent storage. All the
- * transaction logs are stored in a LinkedList in memory.
+ This is implemented PersistentTransactionDAO account
+ By using SQLite
  */
-public class InMemoryTransactionDAO implements TransactionDAO {
+public class  PersistentTransactionDAO implements TransactionDAO {
 
     private static final String pattern = "yyyy-MM-dd";
     private static final SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern);
@@ -47,7 +47,7 @@ public class InMemoryTransactionDAO implements TransactionDAO {
 
 
 
-    public InMemoryTransactionDAO(Context context){
+    public  PersistentTransactionDAO(Context context){
         dbHelper= new DataBaseHelper(context);
 
     }

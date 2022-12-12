@@ -32,13 +32,13 @@ import lk.ac.mrt.cse.dbs.simpleexpensemanager.data.model.Account;
 import lk.ac.mrt.cse.dbs.simpleexpensemanager.data.model.ExpenseType;
 
 /**
- * This is an In-Memory implementation of the AccountDAO interface. This is not a persistent storage. A HashMap is
- * used to store the account details temporarily in the memory.
+ This is implemented PersistentAccountDAO account
+ By using SQLite
  */
-public class InMemoryAccountDAO implements AccountDAO {
+public class  PersistentAccountDAO implements AccountDAO {
     private DataBaseHelper dbHelper;
 
-    public InMemoryAccountDAO(Context context){
+    public  PersistentAccountDAO(Context context){
         dbHelper = new DataBaseHelper(context);
     }
 
