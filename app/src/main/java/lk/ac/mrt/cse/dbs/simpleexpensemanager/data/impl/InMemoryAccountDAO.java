@@ -36,10 +36,10 @@ import lk.ac.mrt.cse.dbs.simpleexpensemanager.data.model.ExpenseType;
  * used to store the account details temporarily in the memory.
  */
 public class InMemoryAccountDAO implements AccountDAO {
-    private DBHelper dbHelper;
+    private DataBaseHelper dbHelper;
 
     public InMemoryAccountDAO(Context context){
-        dbHelper = new DBHelper(context);
+        dbHelper = new DataBaseHelper(context);
     }
 
     @Override

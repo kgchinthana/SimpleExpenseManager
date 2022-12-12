@@ -43,12 +43,12 @@ public class InMemoryTransactionDAO implements TransactionDAO {
 
     private static final String pattern = "yyyy-MM-dd";
     private static final SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern);
-    private DBHelper dbHelper;
+    private DataBaseHelper dbHelper;
 
 
 
     public InMemoryTransactionDAO(Context context){
-        dbHelper= new DBHelper(context);
+        dbHelper= new DataBaseHelper(context);
 
     }
 
