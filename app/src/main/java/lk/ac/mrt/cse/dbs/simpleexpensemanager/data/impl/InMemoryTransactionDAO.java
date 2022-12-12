@@ -26,6 +26,7 @@ import android.icu.text.DateFormat;
 //import android.icu.text.SimpleDateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
@@ -43,12 +44,11 @@ public class InMemoryTransactionDAO implements TransactionDAO {
     private static final String pattern = "yyyy-MM-dd";
     private static final SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern);
     private DBHelper dbHelper;
-    private List<Transaction> transactions;
+
 
 
     public InMemoryTransactionDAO(Context context){
-         dbHelper= new DBHelper(context);
-        transactions = new LinkedList<>();
+        dbHelper= new DBHelper(context);
 
     }
 
@@ -63,16 +63,15 @@ public class InMemoryTransactionDAO implements TransactionDAO {
     @Override
     public List<Transaction> getAllTransactionLogs() {
 
+        List<Transaction> transactions = new ArrayList<>();
         Cursor cursor = dbHelper.sendEntriesTransactionDetailsTable();
 
-        List<Transaction> transactions = new LinkedList<>();
 
-
-        if (cursor.moveToFirst()) {
+        if (cursor.moveToFirst() && cursor != null) {
             do {
-                try {
 
-                    Date date =simpleDateFormat.parse(cursor.toString());
+                try {
+                    Date date =simpleDateFormat.parse(cursor.getString(0));
                     transactions.add(new Transaction(date,cursor.getString(1),ExpenseType.valueOf(cursor.getString(2)),cursor.getDouble(3)));
                 } catch (ParseException e) {
                     e.printStackTrace();
@@ -81,21 +80,24 @@ public class InMemoryTransactionDAO implements TransactionDAO {
 
 
         }
+        cursor.close();
         return transactions;
 
     }
 
     @Override
     public List<Transaction> getPaginatedTransactionLogs(int limit) {
-        Cursor cursor = dbHelper.sendEntriesTransactionDetailsTable();
 
-        int size = cursor.getCount();
+        List<Transaction> transactionsNew = getAllTransactionLogs();
+
+
+        int size = transactionsNew.size();
         if (size <= limit) {
 
-            return transactions;
+            return transactionsNew;
         }
         // return the last <code>limit</code> number of transaction logs
-        return transactions.subList(size-limit, size);
+        return transactionsNew.subList(size-limit, size);
     }
 
 }
