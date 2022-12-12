@@ -43,10 +43,13 @@ public class InMemoryTransactionDAO implements TransactionDAO {
     private static final String pattern = "yyyy-MM-dd";
     private static final SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern);
     private DBHelper dbHelper;
+    private List<Transaction> transactions;
 
 
     public InMemoryTransactionDAO(Context context){
          dbHelper= new DBHelper(context);
+        transactions = new LinkedList<>();
+
     }
 
 
@@ -86,20 +89,13 @@ public class InMemoryTransactionDAO implements TransactionDAO {
     public List<Transaction> getPaginatedTransactionLogs(int limit) {
         Cursor cursor = dbHelper.sendEntriesTransactionDetailsTable();
 
-        List<Transaction> transactions = new LinkedList<>();
-
         int size = cursor.getCount();
         if (size <= limit) {
-            try {
 
-                Date date =simpleDateFormat.parse(cursor.toString());
-                transactions.add(new Transaction(date,cursor.getString(1),ExpenseType.valueOf(cursor.getString(2)),cursor.getDouble(3)));
-            } catch (ParseException e) {
-                e.printStackTrace();
-            }            return transactions;
+            return transactions;
         }
         // return the last <code>limit</code> number of transaction logs
-        return transactions.subList(size - limit, size);
+        return transactions.subList(size-limit, size);
     }
 
 }
