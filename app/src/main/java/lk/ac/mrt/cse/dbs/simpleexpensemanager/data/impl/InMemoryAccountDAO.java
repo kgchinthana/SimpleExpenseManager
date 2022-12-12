@@ -53,7 +53,7 @@ public class InMemoryAccountDAO implements AccountDAO {
         ArrayList<String> AccountNames = new ArrayList<String>();
         if (cursor.moveToFirst()) {
             do {
-                AccountNames.add(cursor.getString(1));
+                AccountNames.add(cursor.getString(0));
             } while (cursor.moveToNext());
             return AccountNames;
         }
@@ -66,10 +66,10 @@ public class InMemoryAccountDAO implements AccountDAO {
         ArrayList<Account> AccountList = new ArrayList<Account>();
         if (cursor.moveToFirst()) {
             do {
-                AccountList.add(new Account(cursor.getString(1),
+                AccountList.add(new Account(cursor.getString(0),
+                        cursor.getString(1),
                         cursor.getString(2),
-                        cursor.getString(3),
-                        cursor.getDouble(4)));
+                        cursor.getDouble(3)));
             } while (cursor.moveToNext());
 
 
@@ -98,7 +98,7 @@ public class InMemoryAccountDAO implements AccountDAO {
             String msg = "Account " + accountNo + " is invalid.";
             throw new InvalidAccountException(msg);
         }
-        dbHelper.removeDataBase(cursor.getString(1));
+        dbHelper.removeDataBase(cursor.getString(0));
 
     }
 
@@ -111,17 +111,25 @@ public class InMemoryAccountDAO implements AccountDAO {
             String msg = "Account " + accountNo + " is invalid.";
             throw new InvalidAccountException(msg);
         }
-        Account account = (Account) cursor;
-        // specific implementation based on the transaction type
-        switch (expenseType) {
-            case EXPENSE:
-                account.setBalance(account.getBalance() - amount);
-                break;
-            case INCOME:
-                account.setBalance(account.getBalance() + amount);
-                break;
+        if (cursor.moveToFirst()) {
+            do {
+                Account account = new Account(cursor.getString(0),cursor.getString(1),cursor.getString(2),cursor.getDouble(3));
+                // specific implementation based on the transaction type
+                switch (expenseType) {
+                    case EXPENSE:
+                        account.setBalance(account.getBalance() - amount);
+                        break;
+                    case INCOME:
+                        account.setBalance(account.getBalance() + amount);
+                        break;
+                }
+                dbHelper.updateEntriesAccountDetailTable(accountNo,account.getBankName(),account.getAccountHolderName(),account.getBalance());
+
+            } while (cursor.moveToNext());
+
+
         }
-        dbHelper.updateEntriesAccountDetailTable(accountNo,account.getBankName(),account.getAccountHolderName(),account.getBalance());
+
 
 
     }

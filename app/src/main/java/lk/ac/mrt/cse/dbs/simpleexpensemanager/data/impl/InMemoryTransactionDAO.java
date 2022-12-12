@@ -69,8 +69,8 @@ public class InMemoryTransactionDAO implements TransactionDAO {
             do {
                 try {
 
-                    Date date =simpleDateFormat.parse(cursor.getString(1));
-                    transactions.add(new Transaction(date,cursor.getString(2),ExpenseType.valueOf(cursor.getString(3)),cursor.getDouble(4)));
+                    Date date =simpleDateFormat.parse(cursor.toString());
+                    transactions.add(new Transaction(date,cursor.getString(1),ExpenseType.valueOf(cursor.getString(2)),cursor.getDouble(3)));
                 } catch (ParseException e) {
                     e.printStackTrace();
                 }
@@ -93,7 +93,7 @@ public class InMemoryTransactionDAO implements TransactionDAO {
             try {
 
                 Date date =simpleDateFormat.parse(cursor.toString());
-                transactions.add(new Transaction(date,cursor.getString(2),ExpenseType.valueOf(cursor.getString(3)),cursor.getDouble(4)));
+                transactions.add(new Transaction(date,cursor.getString(1),ExpenseType.valueOf(cursor.getString(2)),cursor.getDouble(3)));
             } catch (ParseException e) {
                 e.printStackTrace();
             }            return transactions;
