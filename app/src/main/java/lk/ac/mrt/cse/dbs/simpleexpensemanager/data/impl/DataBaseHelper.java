@@ -15,7 +15,7 @@ import lk.ac.mrt.cse.dbs.simpleexpensemanager.data.model.ExpenseType;
 
 public class DataBaseHelper extends SQLiteOpenHelper {
     private static final String DB_NAME = "200093M";
-    private static final int DB_VERSION = 24;
+    private static final int DB_VERSION = 29;
     private static final String TABLE_NAME_1 = "AccountDetails";
     private static final String TABLE_NAME_2 = "TransactionDetails";
     private static final String ACCOUNT_NO = "accountNo";

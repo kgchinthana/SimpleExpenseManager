@@ -82,8 +82,8 @@ public class  PersistentAccountDAO implements AccountDAO {
     public Account getAccount(String accountNo) throws InvalidAccountException {
         Cursor cursor = dbHelper.sendEntryOfAccountNoOFAccountDetailTable(accountNo);
 
-        if (cursor != null) {
-            return (Account) cursor;
+        if (cursor.moveToFirst() && cursor.getCount()>0) {
+            return new Account(cursor.getString(cursor.getColumnIndex("accountNo")),cursor.getString(cursor.getColumnIndex("bankName")),cursor.getString(cursor.getColumnIndex("accountHolderName")),cursor.getDouble(cursor.getColumnIndex("balance")));
         }
 
         String msg = "Account " + accountNo + " is invalid.";
@@ -107,28 +107,24 @@ public class  PersistentAccountDAO implements AccountDAO {
 
         Cursor cursor = dbHelper.sendEntryOfAccountNoOFAccountDetailTable(accountNo);
 
-        if (cursor==null) {
+        if (cursor==null && cursor.getCount()<0) {
             String msg = "Account " + accountNo + " is invalid.";
             throw new InvalidAccountException(msg);
         }
-        if (cursor.moveToFirst()) {
-            do {
-                Account account = new Account(cursor.getString(0),cursor.getString(1),cursor.getString(2),cursor.getDouble(3));
-                // specific implementation based on the transaction type
-                switch (expenseType) {
-                    case EXPENSE:
-                        account.setBalance(account.getBalance() - amount);
-                        break;
-                    case INCOME:
-                        account.setBalance(account.getBalance() + amount);
-                        break;
-                }
-                dbHelper.updateEntriesAccountDetailTable(accountNo,account.getBankName(),account.getAccountHolderName(),account.getBalance());
-
-            } while (cursor.moveToNext());
-
-
+        else {
+            Account account = getAccount(accountNo);
+            // specific implementation based on the transaction type
+            switch (expenseType) {
+                case EXPENSE:
+                    account.setBalance(account.getBalance() - amount);
+                    break;
+                case INCOME:
+                    account.setBalance(account.getBalance() + amount);
+                    break;
+            }
+            dbHelper.updateEntriesAccountDetailTable(accountNo,account.getBankName(),account.getAccountHolderName(),account.getBalance());
         }
+
 
 
 
